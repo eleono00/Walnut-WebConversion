@@ -1,0 +1,106 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pagina HTML</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Risultato:</h1>
+    <div id="graphContainer"></div>
+    <div id="math-expression"></div>
+    <script>
+    function translatePredicateToLatex(predicate) {
+        // Trova l'indice del carattere ":" nel predicato
+        var colonIndex = predicate.indexOf(':');
+
+        // Dividi il predicato in due parti: prima e dopo il carattere ":"
+        var prefix = predicate.substring(0, colonIndex + 1);
+        var suffix = predicate.substring(colonIndex + 1);
+
+        // Rimuovi eventuali spazi seguiti da una stringa che inizia con "?"
+        suffix = suffix.replace(/:\s*\?.*/, '');
+
+        // Applica le traduzioni solo alla parte dopo il carattere ":"
+        suffix = suffix.replace(/\*/g, "\\cdot ");
+        suffix = suffix.replace(/\//g, "\\div ");
+        suffix = suffix.replace(/\+/g, "+");
+        suffix = suffix.replace(/</g, "\\lt ");
+        suffix = suffix.replace(/>/g, "\\gt ");
+        suffix = suffix.replace(/=>/g, "\\Rightarrow ");
+        suffix = suffix.replace(/-/g, "-");
+        suffix = suffix.replace(/=/g, "=");
+        suffix = suffix.replace(/!=/g, "\\neq ");
+        suffix = suffix.replace(/<=>/g, "\\Leftrightarrow ");
+        suffix = suffix.replace(/<=/g, "\\leq ");
+        suffix = suffix.replace(/>=/g, "\\geq ");
+        suffix = suffix.replace(/&/g, "\\wedge ");
+        suffix = suffix.replace(/\|/g, "\\vee ");
+        suffix = suffix.replace(/\^/g, "\\oplus ");
+        suffix = suffix.replace(/([^\\])_/g, '$1\\_');  // Evita la traduzione del carattere "_"
+
+        // Quantificatori
+        suffix = suffix.replace(/E/g, "\\exists ");
+        suffix = suffix.replace(/A/g, "\\forall ");
+
+        // Indicizzazione
+        suffix = suffix.replace(/\[/g, "_{");
+        suffix = suffix.replace(/\]/g, "}");
+
+        // Complemento e inverso
+        suffix = suffix.replace(/~/g, "\\sim ");
+        suffix = suffix.replace(/'/g, "^{-1}");
+
+        // Aggiungere parentesi
+        suffix = "(" + suffix + ")";
+
+        // Ricompone il predicato completo
+        var translatedPredicate = prefix + suffix;
+
+        return translatedPredicate;
+    }
+        function renderGraph(dotContent) {
+            const container = document.getElementById('graphContainer');
+            const viz = new Viz();
+            viz.renderSVGElement(dotContent)
+                .then(svgElement => {
+                    container.appendChild(svgElement);
+                })
+                .catch(error => {
+                    console.error('Errore nella generazione del grafico:', error);
+                });
+        }
+
+        function convertToMathJax(predicateInput) {
+            var mathExpression = document.getElementById("math-expression");
+            var predicate = predicateInput.trim();
+            var translatedPredicate = translatePredicateToLatex(predicate);
+
+            mathExpression.innerHTML = "\\(" + translatedPredicate + "\\)";
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, mathExpression]);
+        }
+
+        $(document).ready(function() {
+            $.ajax({
+                url: '/data', // L'URL dell'endpoint servlet creato nel server
+                method: 'GET',
+                success: function(data) {
+                    const dotContent = data[0];
+                    const predicateInput = data[1];
+                    
+                    renderGraph(dotContent);
+                    convertToMathJax(predicateInput);
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

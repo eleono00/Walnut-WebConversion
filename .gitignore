@@ -1,0 +1,24 @@
+*.class
+classes/
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# Result files
+Result/
+Automata Library/
+Test Results/
+Custom Bases/
+Word Automata Library/test**.txt
+
+# Directory for experiments
+scratch/
+
